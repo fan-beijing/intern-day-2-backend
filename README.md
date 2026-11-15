@@ -191,6 +191,9 @@ uv run pytest          # 或 .venv/Scripts/python.exe -m pytest
 
 自动化结果：`pytest` 16 项全部通过；前端联调时用真实浏览器走完登录 → 记账 → 刷新 → 退出，接口全部按预期响应。
 
+实际执行的命令与响应见 [`docs/verification.md`](docs/verification.md)，接口总览截图见
+[`docs/screenshots/01-swagger.png`](docs/screenshots/01-swagger.png)。
+
 ## 已知取舍
 
 - 用 SQLite 单文件，未引入独立数据库；并发写入压力不在一天练习范围内。

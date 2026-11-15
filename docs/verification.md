@@ -34,8 +34,8 @@ $ curl -s http://localhost:8000/health
 $ curl -s -X POST http://localhost:8000/auth/login \
     -H "Content-Type: application/json" \
     -d '{"username":"demo","password":"<.env 中的 SEED_PASSWORD>"}'
-{"token":"LJ23Ht8v…","token_type":"bearer","expires_at":"2026-11-15T14:40:23Z",
- "user":{"id":1,"username":"demo","created_at":"2026-11-15T12:38:43Z"}}
+{"token":"LJ23Ht8v…","token_type":"bearer","expires_at":"2026-11-15T14:51:45.629313Z",
+ "user":{"id":1,"username":"demo","created_at":"2026-11-15T12:47:11.931772Z"}}
 ```
 
 时间字段带 `Z`，前端不会按本地时间误读。
@@ -58,7 +58,7 @@ $ curl -s -X POST http://localhost:8000/auth/login \
 
 ```text
 $ curl -s http://localhost:8000/auth/me -H "Authorization: Bearer $TOKEN"
-{"id":1,"username":"demo","created_at":"2026-11-15T12:38:43Z"}
+{"id":1,"username":"demo","created_at":"2026-11-15T12:47:11.931772Z"}
 ```
 
 ## 6. 未携带 / 伪造令牌
@@ -78,7 +78,7 @@ $ curl -s -X POST http://localhost:8000/ledger/entries \
     -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
     -d '{"kind":"income","amount":3000,"category":"工资","note":"虚构的月薪"}'
 {"id":1,"kind":"income","amount":3000.0,"category":"工资","note":"虚构的月薪",
- "occurred_on":"2026-11-15","created_at":"2026-11-15T12:41:02Z"}          # 201
+ "occurred_on":"2026-11-15","created_at":"2026-11-15T12:51:02.114820Z"}          # 201
 
 $ curl -s "http://localhost:8000/ledger/summary?month=2026-11" -H "Authorization: Bearer $TOKEN"
 {"month":"2026-11","income":3000.0,"expense":38.5,"balance":2961.5,"count":2}
