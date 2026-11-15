@@ -1,0 +1,23 @@
+name: intern-day-2-backend
+
+services:
+  api:
+    build: .
+    image: intern-day-2-backend:local
+    container_name: intern-day-2-backend
+    env_file:
+      # 缺少 .env 时不在这里报错，交给应用启动时给出「缺 SEED_PASSWORD」的可操作提示
+      - path: .env
+        required: false
+    environment:
+      # 覆盖 .env 里的本机路径，固定指向命名卷挂载点
+      DATABASE_URL: sqlite:////app/data/app.db
+    ports:
+      - "8000:8000"
+    volumes:
+      - ledger-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  ledger-data:
+    name: intern-day-2-backend-data
