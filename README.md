@@ -98,7 +98,7 @@ curl -s -X POST http://localhost:8000/auth/logout -H "Authorization: Bearer $TOK
 
 ## 与前端联调
 
-前端仓库：<https://github.com/你的GitHub用户名/intern-day-2-frontend>（创建仓库后替换此处地址）
+前端仓库：<https://github.com/fan-beijing/intern-day-2-frontend>
 
 两个仓库是独立的 Compose 项目，容器之间没有服务发现。**浏览器直连宿主机映射端口**：
 
