@@ -177,6 +177,7 @@ uv run pytest          # 或 .venv/Scripts/python.exe -m pytest
 
 | 检查项 | 操作 | 实际结果 |
 | --- | --- | --- |
+| 开发容器 | 构建 `.devcontainer` 镜像，容器内执行 `uv sync --frozen`、`uv run pytest` | 依赖安装成功，16 项用例通过 |
 | 容器启动 | `docker compose up --build -d` + `docker compose ps` | `Up (healthy)`，`/health` 返回 `{"status":"ok"}` |
 | 健康检查 | `curl /health` | `200`，不需要登录 |
 | 正常登录 | 正确账号密码 | `200`，返回令牌、过期时间与用户信息 |
