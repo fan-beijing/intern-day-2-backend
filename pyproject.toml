@@ -23,4 +23,6 @@ package = false
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# 让 pytest 把仓库根目录加入 sys.path，容器内 `uv run pytest` 也能导入 app 包
+pythonpath = ["."]
 addopts = "-q"
