@@ -146,6 +146,9 @@ uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 uv run pytest
 ```
 
+开发容器的命令级实测记录（`@devcontainers/cli` 构建、容器内工具版本、`uv sync --frozen`、16 条用例通过）见
+[`docs/devcontainer-check.md`](docs/devcontainer-check.md)。
+
 ### B. 本机虚拟环境
 
 ```bash
