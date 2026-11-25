@@ -12,6 +12,11 @@ services:
     environment:
       # 覆盖 .env 里的本机路径，固定指向命名卷挂载点
       DATABASE_URL: sqlite:////app/data/app.db
+      # 第三天：模型服务配置只在后端容器内可见。
+      # 值来自 .env（env_file 已加载）；这里显式声明，空值也不会被打进镜像。
+      MODEL_API_KEY: ${MODEL_API_KEY:-}
+      MODEL_BASE_URL: ${MODEL_BASE_URL:-https://api.deepseek.com/v1}
+      MODEL_ID: ${MODEL_ID:-deepseek-chat}
     ports:
       - "8000:8000"
     volumes:
