@@ -120,6 +120,7 @@ curl -s -X POST http://localhost:8000/auth/logout -H "Authorization: Bearer $TOK
 | GET | `/ledger/entries?month=YYYY-MM` | 是 | 按月查看本人账目，默认当月 |
 | DELETE | `/ledger/entries/{id}` | 是 | 删除本人账目 |
 | GET | `/ledger/summary?month=YYYY-MM` | 是 | 月度收入 / 支出 / 结余 |
+| POST | `/agent` | 是 | 第三天：AG-UI 事件流入口，见下文「Agent 对话」 |
 
 完整字段与校验规则见 `/docs`（OpenAPI）。时间字段统一以 `UTC` 结尾输出，例如 `2026-11-15T14:40:23Z`。
 
@@ -133,6 +134,47 @@ curl -s -X POST http://localhost:8000/auth/logout -H "Authorization: Bearer $TOK
 - **金额**：存整数「分」，汇总时再换算成元，避免浮点累加误差。
 - **过期清理**：命中过期会话时顺手删行，避免 `sessions` 表无限增长。
 - **参数校验**：全部使用请求/响应模型；`month` 用正则约束为 `YYYY-MM`，非法值返回 `422`。
+
+## 第三天：Agent 对话（Microsoft Agent Framework + AG-UI）
+
+登录后的记账页多了一个「雪庐小账房」聊天面板。后端负责跑 Agent，前端只负责显示。
+
+- 接口：`POST /agent`，返回 `text/event-stream`（AG-UI 事件流），**必须带登录令牌**。
+- Agent：`xuelu-ledger-assistant`，名称、指令与能力边界写在 `app/routers/agent.py` 的 `AGENT_INSTRUCTIONS`。
+- 只用了一个只读工具 `month_summary`：查询**当前登录用户**某个月的收支汇总，绝不写库。
+- 身份来源：`verify_agent_login` 依赖校验 Bearer 后写入 `ContextVar`，工具执行时读取。
+  模型只能决定 `month` 参数，无法指定 `user_id`；并发请求各持一份上下文，不会串号。
+
+### 模型配置（只在后端）
+
+| 变量 | 说明 | 示例（占位） |
+| --- | --- | --- |
+| `MODEL_API_KEY` | 模型服务密钥，未设置则 `/agent` 不注册 | `sk-...` |
+| `MODEL_BASE_URL` | OpenAI 兼容服务地址，必须 https（本机 Mock 允许 http://127.0.0.1） | `https://api.deepseek.com/v1` |
+| `MODEL_ID` | 模型名 | `deepseek-chat` |
+
+密钥只写进本地 `.env`（已被 gitignore），不进镜像构建参数、不进代码、不进前端环境变量。
+
+> 注意：DeepSeek 这类兼容服务只实现了 `/chat/completions`，不支持 OpenAI 新的 `/responses`。
+> 所以这里用 `OpenAIChatCompletionClient`，不是 `OpenAIChatClient`（后者会 404）。
+
+### 认证与失败路径
+
+- 未登录 / 令牌过期：在**进入 Agent 之前**返回 `401`，不会产生任何模型调用（有测试覆盖）。
+- 运行中出错：AG-UI 返回 `RUN_ERROR` 事件，前端结束 loading 并提示重试。
+- 换账号或退出：前端清掉令牌并卸载聊天组件；旧令牌再请求 `/agent` 同样是 `401`。
+
+### 会话行为
+
+对话历史由浏览器持有，每次运行把当前会话消息一起发上来；后端不落库。
+因此**刷新页面或重启服务后历史会丢失**，只有「当前这次会话」有效。`threadId`/`runId`
+只用于标识会话与运行，不能当凭证使用。
+
+### 版本与文档
+
+- agent-framework-core 1.26.0 · agent-framework-ag-ui 1.8.1 · agent-framework-openai 1.18.2（见 `uv.lock`）
+- 原理说明：[`docs/day-3-agent-learning.md`](docs/day-3-agent-learning.md)
+- 交互图：[`docs/diagrams/day-3-agent-interaction.png`](docs/diagrams/day-3-agent-interaction.png)
 
 ## 开发
 
