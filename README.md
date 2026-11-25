@@ -176,6 +176,29 @@ curl -s -X POST http://localhost:8000/auth/logout -H "Authorization: Bearer $TOK
 - 原理说明：[`docs/day-3-agent-learning.md`](docs/day-3-agent-learning.md)
 - 交互图：[`docs/diagrams/day-3-agent-interaction.png`](docs/diagrams/day-3-agent-interaction.png)
 
+### 第三天自测记录
+
+分两类如实记录：**不依赖模型额度的链路项**已实测通过；**依赖真实模型调用**的项目
+在配置有效 `MODEL_API_KEY` 后补充，未验证的不写成通过。
+
+| 检查项 | 验证方式 | 结果 |
+| --- | --- | --- |
+| 端点注册 | 配置 `MODEL_API_KEY` 后读取 `GET /openapi.json` | ✅ `/agent` 出现在路径列表中 |
+| 未登录访问 | 不带令牌直接 `POST /agent` | ✅ `401`，提示「登录状态无效，请重新登录」 |
+| 伪造令牌 | `Authorization: Bearer <随机串>` 调 `/agent` | ✅ `401`，未进入模型调用 |
+| 拒绝发生在模型之前 | 用占位 key（无效密钥）复现上述两种请求 | ✅ 先得到 `401`，说明鉴权早于任何模型调用 |
+| AG-UI 事件流 | 合法令牌 + 占位 key 调 `/agent`，观察原始响应 | ✅ `HTTP 200`，先 `RUN_STARTED`，后 `RUN_ERROR`（`ChatClientException`） |
+| 事件流是 SSE 而非 WebSocket | 检查响应体为 `data: {...}` 分帧、`text/event-stream` | ✅ 全程单个 HTTP POST，无 upgrade |
+| 密钥不落前端 | 检查前端环境变量与构建产物 | ✅ 前端只有 `VITE_API_BASE_URL` 与 Runtime 地址，无 `MODEL_*` |
+| 真实模型流式回复 | 配置有效 `MODEL_API_KEY` 后发送问题，观察增量事件 | ⬜ 待有额度环境验证（见 PR 的「已知问题」） |
+| 多轮上下文 | 连续两轮：先告知虚构昵称，再追问该昵称 | ⬜ 同上 |
+| 只读工具真实执行 | 询问某月收支汇总，核对工具返回值与 `/ledger/summary` | ⬜ 同上 |
+
+> 关于「拒绝发生在模型之前」这条的取证方法：使用一个格式合法但无效的占位密钥
+> 启动服务（端点会注册），不带令牌时得到 `401`；带合法令牌时才真正请求模型服务并拿到
+> 上游的鉴权错误。两次结果不同，说明拦截点在模型调用之前。
+> 这条日志里不含任何真实密钥。
+
 ## 开发
 
 ### A. VS Code 开发容器（推荐）
