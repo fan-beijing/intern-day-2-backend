@@ -143,9 +143,11 @@ MODEL_ID=deepseek-v4.1-flash
 
 - 原理说明：[`docs/day-3-agent-learning.md`](https://github.com/fan-beijing/intern-day-2-backend/blob/feat/agent-chat/docs/day-3-agent-learning.md)
 - 交互图（自绘）：[`docs/diagrams/day-3-agent-interaction.png`](https://github.com/fan-beijing/intern-day-2-backend/blob/feat/agent-chat/docs/diagrams/day-3-agent-interaction.png)
-![第三天交互图](https://github.com/fan-beijing/intern-day-2-backend/raw/feat/agent-chat/docs/diagrams/day-3-agent-interaction.png)
 
-> 上图是 PR 分支里的实际图片；点文件名可看原图。图注包含接口路径、认证传递位置与两类错误路径。
+<!-- 截图请用拖拽/回形针上传到本 PR，不要用 raw 外链：
+     仓库是私有的，raw 地址匿名访问会被拒，PR 正文里会显示破图。 -->
+![第三天交互图 - 请在此处拖入 docs/diagrams/day-3-agent-interaction.png]
+
 - 复盘：[`docs/day-3-retrospective.md`](https://github.com/fan-beijing/intern-day-2-backend/blob/feat/agent-chat/docs/day-3-retrospective.md)
 - 演示脚本：[`docs/day-3-demo-script.md`](https://github.com/fan-beijing/intern-day-2-backend/blob/feat/agent-chat/docs/day-3-demo-script.md)
 
