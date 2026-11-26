@@ -87,6 +87,9 @@ curl -s -X POST http://localhost:8000/auth/logout -H "Authorization: Bearer $TOK
 
 ## 练习账号初始化
 
+> 改过 `SEED_PASSWORD` 之后如果登录一直提示「账号或密码错误」，先确认是不是**沿用旧数据卷**：种子账号只在账号不存在时创建，已存在不会更新密码。
+> 需要按新密码重建时用 `docker compose down -v`（会清空账目数据）再 `up -d`；不想丢数据就在页面里换回旧密码，或直接改数据库里的 `password_hash`。
+
 账号不是硬编码，而是启动时按环境变量创建（`app/seed.py`）：
 
 1. `cp .env.example .env`；
@@ -170,6 +173,23 @@ curl -s -X POST http://localhost:8000/auth/logout -H "Authorization: Bearer $TOK
 因此**刷新页面或重启服务后历史会丢失**，只有「当前这次会话」有效。`threadId`/`runId`
 只用于标识会话与运行，不能当凭证使用。
 
+### 无模型额度时：用 Mock 验证链路
+
+`compose.mock.yaml` 提供一个**本地 Mock 模型服务**，用于在没有可用额度时
+验证「流式事件 + 工具调用闭环 + 多轮上下文」。它是真实的 HTTP 服务：
+真的按 SSE 逐块返回 `chat.completion.chunk`，真的返回 `tool_calls`，
+Agent Framework 真的会去执行 `month_summary`、拿真实数据库结果、再请求一次。
+
+```bash
+docker compose -f compose.yaml -f compose.mock.yaml up -d --build
+```
+
+启动后 `api` 使用 `MODEL_BASE_URL=http://mock:8899/v1`、`MODEL_ID=mock-model`，
+浏览器照常访问 5173，Agent 面板的回复来自 Mock。
+
+**它不验证什么**：真实模型的语义理解与回答质量。
+凡基于 Mock 的结论在本文与 PR 里都标注了 Mock，不写成「真实模型测试通过」。
+
 ### 版本与文档
 
 - agent-framework-core 1.26.0 · agent-framework-ag-ui 1.8.1 · agent-framework-openai 1.18.2（见 `uv.lock`）
@@ -190,10 +210,26 @@ curl -s -X POST http://localhost:8000/auth/logout -H "Authorization: Bearer $TOK
 | AG-UI 事件流 | 合法令牌 + 占位 key 调 `/agent`，观察原始响应 | ✅ `HTTP 200`，先 `RUN_STARTED`，后 `RUN_ERROR`（`ChatClientException`） |
 | 事件流是 SSE 而非 WebSocket | 检查响应体为 `data: {...}` 分帧、`text/event-stream` | ✅ 全程单个 HTTP POST，无 upgrade |
 | 密钥不落前端 | 检查前端环境变量与构建产物 | ✅ 前端只有 `VITE_API_BASE_URL` 与 Runtime 地址，无 `MODEL_*` |
-| 真实模型流式回复 | 配置有效 `MODEL_API_KEY` 后发送问题，观察增量事件 | ⬜ 待有额度环境验证（见 PR 的「已知问题」） |
-| 多轮上下文 | 连续两轮：先告知虚构昵称，再追问该昵称 | ⬜ 同上 |
-| 只读工具真实执行 | 询问某月收支汇总，核对工具返回值与 `/ledger/summary` | ⬜ 同上 |
+| 容器内端点注册 | 后端容器启动后读取容器内 `/openapi.json` | ✅ `/agent` 在路径列表中，容器能读到 `MODEL_ID=deepseek-chat` |
+| 容器内鉴权拦截 | 在容器里重跑「无令牌 / 伪造令牌」两次请求 | ✅ 均 `401`，与宿主机结果一致 |
+| 流式增量渲染 | 浏览器发送问题，观察消息逐字出现（非整段弹出） | ✅ Mock 链路下 `TEXT_MESSAGE_CONTENT` 分 11 次到达，页面逐步更新 |
+| 多轮上下文 | 轮1「我叫阿雪」→ 轮2「我叫什么名字？」 | ✅ 轮2 正确复述「阿雪」，说明历史消息真的参与 |
+| 只读工具真实执行 | 问「我11月花了多少钱」，与 `/ledger/summary` 对账 | ✅ `TOOL_CALL_*` 事件完整，工具查出 `支出 88.88 元、共 1 笔`，与页面汇总一致 |
+| 工具不会被误触发 | 问「你好，我叫阿雪」这类非账目问题 | ✅ 不产生 `TOOL_CALL`，只有文本事件 |
+| 新建对话 | 点击「新建对话」后再提问 | ✅ 换新 threadId，旧消息不再出现 |
+| 真实模型流式回复 | 配置有效 `MODEL_API_KEY` 后发送问题 | ⬜ 账户余额为 0（`Insufficient Balance`），需充值或换有额度的密钥后复验 |
 
+> 当前状态说明：**协议链路已全部实测通过**（鉴权、SSE 事件流、工具闭环、多轮上下文、
+> 前端逐步渲染、容器编排）。上表里标注 ✅ 的流式/工具/多轮三项，是在
+> `compose.mock.yaml` 提供的**本地 Mock 模型**下验证的——Mock 服务是真实的 HTTP 服务，
+> 真的按 SSE 逐块返回、真的触发 `tool_calls`、工具真的查了数据库，验证的是协议与链路，
+> **不验证真实模型的语义能力**。
+>
+> 本次使用的 `MODEL_API_KEY` 认证能通过（`/models` 返回 200），但账户余额为 0，
+> 调用返回 `Insufficient Balance`，因此**真实模型对话未完成**，如实标注为未通过。
+> 换用有额度的密钥后，把 `.env` 的 `MODEL_API_KEY` 换掉、去掉 `compose.mock.yaml`
+> 重新 `up -d` 即可复验这一行。
+>
 > 关于「拒绝发生在模型之前」这条的取证方法：使用一个格式合法但无效的占位密钥
 > 启动服务（端点会注册），不带令牌时得到 `401`；带合法令牌时才真正请求模型服务并拿到
 > 上游的鉴权错误。两次结果不同，说明拦截点在模型调用之前。
