@@ -141,17 +141,33 @@ MODEL_ID=deepseek-v4.1-flash
 
 ## 原理说明与交互图
 
-- 原理说明：[`docs/day-3-agent-learning.md`](https://github.com/fan-beijing/intern-day-2-backend/blob/feat/agent-chat/docs/day-3-agent-learning.md)
-- 交互图（自绘）：[`docs/diagrams/day-3-agent-interaction.png`](https://github.com/fan-beijing/intern-day-2-backend/blob/feat/agent-chat/docs/diagrams/day-3-agent-interaction.png)
+四份文档都在本仓库 `docs/` 目录下（在 PR 分支 `feat/agent-chat` 上）：
 
-<!-- 截图请用拖拽/回形针上传到本 PR，不要用 raw 外链：
-     仓库是私有的，raw 地址匿名访问会被拒，PR 正文里会显示破图。 -->
-![第三天交互图 - 请在此处拖入 docs/diagrams/day-3-agent-interaction.png]
+| 文档 | 路径 | 内容 |
+| --- | --- | --- |
+| 原理说明 | `docs/day-3-agent-learning.md` | 任务说明第四节 8 个问题逐条回答 |
+| 交互图 | `docs/diagrams/day-3-agent-interaction.png` | 自绘，含真实地址、认证位置、两类错误路径 |
+| 复盘 | `docs/day-3-retrospective.md` | 最难的概念 + 一个问题从现象到定位的完整过程 |
+| 演讲脚本 | `docs/day-3-demo-script.md` | 5—8 分钟演示流程 |
 
-- 复盘：[`docs/day-3-retrospective.md`](https://github.com/fan-beijing/intern-day-2-backend/blob/feat/agent-chat/docs/day-3-retrospective.md)
-- 演示脚本：[`docs/day-3-demo-script.md`](https://github.com/fan-beijing/intern-day-2-backend/blob/feat/agent-chat/docs/day-3-demo-script.md)
+> 为什么这里只写路径不写链接：仓库是私有的，PR 正文里的相对链接会被 GitHub
+> 解析成 `blob/docs/...`（缺分支名）从而报「没有可比性」，`raw` 外链也因私有
+> 仓库不可匿名访问而裂图。所以文档正文里只列路径，**交互图请用下方拖拽方式
+> 直接上传到本 PR**，这样在私有仓库里也能稳定显示。
 
-前端 README 链接到本篇文档，两个仓库不重复维护两个版本。
+**交互图内容摘要**（图的要点，方便不下载也能看懂）：
+
+- 四层：用户/React+CopilotKit → Vite(5173) → CopilotKit Runtime(4000) → FastAPI(8000) → Agent Framework → 模型/工具
+- 接口：`POST /api/copilotkit`（浏览器→Runtime，同源代理）、`POST /agent`（Runtime→Python，AG-UI）
+- 传输：HTTP + SSE（`text/event-stream`），全程不使用 WebSocket
+- 认证：浏览器发 `Authorization: Bearer`，Runtime 按请求原样透传，FastAPI 在模型调用前校验
+- 两类错误：建流前 `401`（看状态码）；建流后 `200` + `RUN_ERROR` 事件
+- 拓扑：两个 Compose 项目经共享网络 `intern-day-shared`，用服务名 `api:8000` 对接
+
+<!-- 请把下面的占位行整行删掉，然后把 docs/diagrams/day-3-agent-interaction.png
+     直接拖到这个位置（或用工具栏回形针上传）。GitHub 会生成 user-attachments
+     地址，私有仓库里也能正常显示。 -->
+![交互图：请在此处拖入 docs/diagrams/day-3-agent-interaction.png]
 
 ## 设计取舍与已知限制
 
