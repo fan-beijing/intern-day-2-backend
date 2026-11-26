@@ -4,6 +4,10 @@
 
 ---
 
+> **base 说明**：本 PR 以第二天的 `feat/login-and-custom-feature` 为 base。
+> 第二天的 PR 尚未合并，按任务说明第 110 行的要求，第三天 PR 暂以该分支为基础，
+> 并在下方「配套仓库」处关联第二天的 PR。
+
 ## 目标
 
 在第二天的登录鉴权与记账后端基础上，用 **Microsoft Agent Framework（Python）** 定义一个记账助手 Agent，
