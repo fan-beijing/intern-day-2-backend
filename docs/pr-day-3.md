@@ -8,6 +8,25 @@
 > 第二天的 PR 尚未合并，按任务说明第 110 行的要求，第三天 PR 暂以该分支为基础，
 > 并在下方「配套仓库」处关联第二天的 PR。
 
+## 演示材料（截图）
+
+> **需要手动上传两张图**：把下面两个占位行替换成真实图片。
+> 做法：删掉占位行 → 用编辑器把图片拖到这个位置（或点工具栏回形针）。
+> GitHub 会生成 `user-attachments` 地址，私有仓库下也能正常显示。
+> 不要用 raw 外链：私有仓库不可匿名访问，会显示破图。
+
+**① 交互图**（自绘，含真实接口路径、认证位置、两类错误路径）
+
+<!-- 把这张图拖到这里：D:\2026-11-15-20-13-07\intern-day-2-backend\docs\diagrams\day-3-agent-interaction.png -->
+![待上传：day-3-agent-interaction.png]
+
+**② 浏览器对话截图**（真实模型，三轮对话）
+
+<!-- 把这张图拖到这里：D:\2026-11-15-20-13-07\intern-day-2-frontend\docs\screenshots\07-agent-real-model.png -->
+![待上传：07-agent-real-model.png]
+
+---
+
 ## 目标
 
 在第二天的登录鉴权与记账后端基础上，用 **Microsoft Agent Framework（Python）** 定义一个记账助手 Agent，
@@ -164,10 +183,6 @@ MODEL_ID=deepseek-v4.1-flash
 - 两类错误：建流前 `401`（看状态码）；建流后 `200` + `RUN_ERROR` 事件
 - 拓扑：两个 Compose 项目经共享网络 `intern-day-shared`，用服务名 `api:8000` 对接
 
-<!-- 请把下面的占位行整行删掉，然后把 docs/diagrams/day-3-agent-interaction.png
-     直接拖到这个位置（或用工具栏回形针上传）。GitHub 会生成 user-attachments
-     地址，私有仓库里也能正常显示。 -->
-![交互图：请在此处拖入 docs/diagrams/day-3-agent-interaction.png]
 
 ## 设计取舍与已知限制
 
