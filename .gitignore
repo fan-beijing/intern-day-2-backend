@@ -16,3 +16,6 @@ data/
 .ruff_cache/
 .mypy_cache/
 .DS_Store
+
+# 运行日志（本机调试产物）
+*.log

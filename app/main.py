@@ -8,6 +8,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.agent_config import AgentSettings
 from app.config import ConfigError, settings
 from app.db import SessionLocal, init_db
 from app.routers import auth, ledger
@@ -49,6 +50,20 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(ledger.router)
 
+# 第三天：配置了模型密钥才注册受登录保护的 AG-UI 端点（POST /agent）。
+# 未配置时给出可操作提示，其余接口照常可用——这是刻意的降级，方便无凭证环境复现。
+agent_settings = AgentSettings()
+if agent_settings.enabled:
+    problems = agent_settings.validate()
+    if problems:
+        print("[启动失败] " + "；".join(problems), file=sys.stderr)
+        raise SystemExit(1)
+    from app.routers.agent import add_agent_endpoint
+
+    add_agent_endpoint(app, agent_settings)
+else:
+    print("[提示] 未设置 MODEL_API_KEY，/agent 端点未注册。参见 .env.example「记账助手 Agent」一节。")
+
 
 @app.get("/health", tags=["meta"], summary="健康检查")
 def health() -> dict[str, str]:
@@ -60,5 +75,12 @@ def root() -> dict[str, object]:
     return {
         "service": "intern-day-2-backend",
         "docs": "/docs",
-        "endpoints": ["/auth/login", "/auth/me", "/auth/logout", "/ledger/entries", "/ledger/summary"],
+        "endpoints": [
+            "/auth/login",
+            "/auth/me",
+            "/auth/logout",
+            "/ledger/entries",
+            "/ledger/summary",
+            "/agent (AG-UI, 需登录)",
+        ],
     }
