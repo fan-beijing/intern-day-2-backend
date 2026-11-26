@@ -23,9 +23,21 @@ class AgentSettings:
 
     @property
     def is_local_base_url(self) -> bool:
-        """本机 Mock / 本地模型（如 Ollama）走 http 是允许的，其余必须 https。"""
+        """允许非 https 的本机 / 容器内 Mock 地址。
+
+        真实模型服务必须 https：密钥与提示词都会经过这条连接，明文传输不可接受。
+        但以下场景走明文是合理的，且都只在本机或自有容器网络内：
+
+        - http://localhost / http://127.0.0.1：本机直接跑 Mock 或 Ollama
+        - http://mock:8899：`compose.mock.yaml` 里同项目的 Mock 服务
+          （容器内服务名，不出宿主机）
+
+        除此之外一律要求 https，避免有人把公司内网服务误配成明文。
+        """
         lowered = self.base_url.lower()
-        return lowered.startswith(("http://localhost", "http://127.0.0.1"))
+        return lowered.startswith(
+            ("http://localhost", "http://127.0.0.1", "http://mock:")
+        )
 
     def validate(self) -> list[str]:
         problems: list[str] = []
