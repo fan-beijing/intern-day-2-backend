@@ -115,12 +115,25 @@ docs/diagrams/day-3-agent-interaction.png  自绘交互图
 | 跨项目连通 | Runtime 经共享网络访问 `api:8000`，`/health` 与 `/auth/me` 均 200 |
 | 从零复现 | 清空卷与网络后按 README 步骤重建，登录 → 对话 → 工具调用全部可复现 |
 
-### 真实模型
+### 真实模型（已通过）
 
-**未通过，如实标注**：本次 `MODEL_API_KEY` 认证有效（`GET /models` 返回 200），
-但账户余额为 0，调用返回 `402 Insufficient Balance`，因此真实模型对话未完成。
-上表中流式/工具/多轮三项是在 Mock 模型下验证的——验证的是协议与链路，
-**不验证真实模型的语义能力**。换有额度的密钥后需复验并回填。
+密钥由导师提供，走阿里云百炼的 OpenAI 兼容接口：
+
+```ini
+MODEL_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+MODEL_ID=deepseek-v4.1-flash
+```
+
+| 检查项 | 结果 |
+| --- | --- |
+| 真实模型流式回复 | ✅ 逐字返回，`TEXT_MESSAGE_CONTENT` 多块到达 |
+| 真实模型触发只读工具 | ✅ 问「本月花了多少」，模型调 `month_summary`，返回「支出 180.30 元，共 2 笔」，与 `/ledger/summary` 完全一致 |
+| 账目为空时不编造 | ✅ 同一个问题，账目为空时回答「本月还没有任何账目记录」 |
+| 真实模型多轮上下文 | ✅ 轮1「我叫阿雪，爱吃火锅」→ 轮2 准确复述，并说明只在本对话内记住 |
+| 鉴权仍在模型之前 | ✅ 未登录 401，零模型调用 |
+
+上表中 Mock 相关项保留记录：`compose.mock.yaml` 用于无额度时验证协议链路，
+文档里标注 Mock 的结论只证明链路通，不代表模型能力。
 
 ## 原理说明与交互图
 
@@ -133,8 +146,8 @@ docs/diagrams/day-3-agent-interaction.png  自绘交互图
 
 ## 已知问题与未完成项
 
-1. **真实模型对话未完成**：账户余额为 0（`Insufficient Balance`）。复现方式：
-   换有效密钥后 `docker compose up -d`（不带 `compose.mock.yaml`）再问一次即可。
+1. **真实模型已接通**（阿里云百炼 `deepseek-v4.1-flash`）。换其他服务商时改
+   `MODEL_BASE_URL` / `MODEL_ID` / `MODEL_API_KEY` 三个变量即可，代码不用动。
 2. **`host.docker.internal` 丢失 Authorization**：本机 Windows + Docker Desktop 环境下，
    容器经该地址访问宿主机时 `Authorization` 头被本机代理改写丢失
    （同一令牌走它得 401，走 Docker 网关 `172.19.0.1` 得 200）。
