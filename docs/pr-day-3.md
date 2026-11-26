@@ -141,10 +141,13 @@ MODEL_ID=deepseek-v4.1-flash
 
 ## 原理说明与交互图
 
-- 原理说明：[`docs/day-3-agent-learning.md`](docs/day-3-agent-learning.md)
-- 交互图（自绘）：[`docs/diagrams/day-3-agent-interaction.png`](docs/diagrams/day-3-agent-interaction.png)
-- 复盘：[`docs/day-3-retrospective.md`](docs/day-3-retrospective.md)
-- 演示脚本：[`docs/day-3-demo-script.md`](docs/day-3-demo-script.md)
+- 原理说明：[`docs/day-3-agent-learning.md`](https://github.com/fan-beijing/intern-day-2-backend/blob/feat/agent-chat/docs/day-3-agent-learning.md)
+- 交互图（自绘）：[`docs/diagrams/day-3-agent-interaction.png`](https://github.com/fan-beijing/intern-day-2-backend/blob/feat/agent-chat/docs/diagrams/day-3-agent-interaction.png)
+![第三天交互图](https://github.com/fan-beijing/intern-day-2-backend/raw/feat/agent-chat/docs/diagrams/day-3-agent-interaction.png)
+
+> 上图是 PR 分支里的实际图片；点文件名可看原图。图注包含接口路径、认证传递位置与两类错误路径。
+- 复盘：[`docs/day-3-retrospective.md`](https://github.com/fan-beijing/intern-day-2-backend/blob/feat/agent-chat/docs/day-3-retrospective.md)
+- 演示脚本：[`docs/day-3-demo-script.md`](https://github.com/fan-beijing/intern-day-2-backend/blob/feat/agent-chat/docs/day-3-demo-script.md)
 
 前端 README 链接到本篇文档，两个仓库不重复维护两个版本。
 
