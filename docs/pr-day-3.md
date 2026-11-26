@@ -144,17 +144,34 @@ MODEL_ID=deepseek-v4.1-flash
 
 前端 README 链接到本篇文档，两个仓库不重复维护两个版本。
 
-## 已知问题与未完成项
+## 设计取舍与已知限制
 
-1. **真实模型已接通**（阿里云百炼 `deepseek-v4.1-flash`）。换其他服务商时改
-   `MODEL_BASE_URL` / `MODEL_ID` / `MODEL_API_KEY` 三个变量即可，代码不用动。
-2. **`host.docker.internal` 丢失 Authorization**：本机 Windows + Docker Desktop 环境下，
-   容器经该地址访问宿主机时 `Authorization` 头被本机代理改写丢失
-   （同一令牌走它得 401，走 Docker 网关 `172.19.0.1` 得 200）。
-   已改为共享网络直连服务名，README 写明 `docker network create intern-day-shared` 步骤。
-3. **会话历史不落库**：历史存在浏览器，刷新页面即丢失；服务重启后同样不保留。
-   这是今天明确的取舍，README 已写清。
-4. **未做的**：多 Agent、RAG、向量库、MCP、审批流、生产部署，均不在今日范围。
+> 本节说明**有意为之的取舍**和**任务范围外**的部分，不是遗留缺陷。
+> 任务说明第 50 行明确「不要求多 Agent、RAG、向量数据库、MCP、复杂审批流或生产部署」，
+> 第 150 行明确「可以只保存当前会话，今天不要求数据库持久化」。
+
+### 有意为之的取舍
+
+1. **会话历史不落库**：历史存浏览器，每次运行全量上传；刷新页面或服务重启后丢失。
+   这是任务说明允许的取舍（第 150 行），README 已写清行为。
+   `threadId` 只是会话分组标签，不是凭证。
+2. **前端用 Vite 开发服务器演示**：容器里跑 `pnpm dev`，不是生产构建产物，
+   符合「今天重点是走通交互链路」的定位。
+3. **单 Agent、单只读工具**：主题聚焦，符合任务要求的最小能力集。
+
+### 任务范围外（明确不做）
+
+多 Agent、RAG、向量数据库、MCP、复杂审批流、生产部署——任务说明第 50 行列明不要求。
+
+### 环境相关的说明（已解决，留档备查）
+
+- **`host.docker.internal` 丢失 Authorization**：本机 Windows + Docker Desktop 下，
+  容器经该地址访问宿主机时 `Authorization` 头被本机代理改写丢失
+  （同一令牌走它 401、走 Docker 网关 200）。**已改为共享网络直连服务名 `api:8000`**，
+  README 写明 `docker network create intern-day-shared` 步骤。
+- **容器内 npm 源被拦截**：`.npmrc` 指向 npmmirror，`--frozen-lockfile` 校验仍生效。
+- **改过 `SEED_PASSWORD` 后登录失败**：种子账号只在不存在时创建，需 `down -v` 重建，
+  README 已提醒。
 
 ## 敏感信息检查
 
