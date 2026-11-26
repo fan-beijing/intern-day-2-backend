@@ -1,0 +1,52 @@
+# 可选的 Mock 模型服务（compose override）。
+#
+# 用途：在拿不到模型额度时，用本地 Mock 服务验证「流式事件 + 工具调用闭环」。
+# 它不是真实模型：只是按 OpenAI 兼容格式、以 SSE 逐块返回文本，并按需触发 tool_calls。
+# 凡是基于它的验证结论，README / PR 必须标注 Mock。
+#
+# 用法：
+#   docker compose -f compose.yaml -f compose.mock.yaml up -d --build
+#   # 浏览器照常访问 5173；Agent 面板的回复来自 Mock
+#
+# 安全说明：MODEL_BASE_URL 用 http://mock:8899/v1。
+# 为了让这组地址能通过 AgentSettings 的 https 校验，mock 服务的地址写进
+# 允许列表（app/agent_config.py 的 is_local_base_url），仅限本机/内网 Mock 使用。
+
+services:
+  mock:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: intern-day-2-backend:local
+    container_name: intern-day-2-backend-mock
+    # 复用后端镜像，里面已有 fastapi / uvicorn，不需要额外装依赖
+    entrypoint: ["/app/.venv/bin/python", "/app/scripts/mock_model_server.py"]
+    environment:
+      # 容器内必须监听 0.0.0.0，同项目的 api 才能通过服务名访问
+      MOCK_HOST: "0.0.0.0"
+      MOCK_PORT: "8899"
+    volumes:
+      - ./scripts:/app/scripts:ro
+    expose:
+      - "8899"
+    healthcheck:
+      test:
+        - CMD
+        - /app/.venv/bin/python
+        - -c
+        - "import urllib.request;urllib.request.urlopen('http://127.0.0.1:8899/health').read()"
+      interval: 10s
+      timeout: 3s
+      start_period: 5s
+      retries: 5
+    restart: unless-stopped
+
+  api:
+    environment:
+      # 指向本 compose 项目内的 mock 服务（容器内可解析服务名）
+      MODEL_API_KEY: mock-key
+      MODEL_BASE_URL: http://mock:8899/v1
+      MODEL_ID: mock-model
+    depends_on:
+      mock:
+        condition: service_healthy
